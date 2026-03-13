@@ -99,3 +99,21 @@ class StudentTable(tk.Frame):
             entry.destroy()
 
         entry.bind("<Return>",save)
+        
+    def search(self, keyword):
+
+        keyword = keyword.lower()
+
+        for item in self.tree.get_children():
+
+            values = self.tree.item(item)["values"]
+
+            text = " ".join(str(v).lower() for v in values)
+
+            if keyword in text:
+
+                self.tree.selection_set(item)
+
+                self.tree.see(item)
+
+                break
