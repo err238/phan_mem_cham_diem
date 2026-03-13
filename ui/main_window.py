@@ -25,6 +25,7 @@ class MainWindow:
         self.table.pack(fill="both",expand=True)
 
         self.current_file=None
+        self.input_dialog = None
 
         self.create_toolbar()
 
@@ -161,7 +162,14 @@ class MainWindow:
         if self.table.df is None:
             return
 
-        InputScoreDialog(
+        # nếu dialog đang mở thì focus vào nó
+        if self.input_dialog and self.input_dialog.win.winfo_exists():
+            self.input_dialog.win.lift()
+            self.input_dialog.win.focus_force()
+            return
+
+        # nếu chưa mở thì tạo mới
+        self.input_dialog = InputScoreDialog(
             self.root,
             self.table.df,
             self.current_file

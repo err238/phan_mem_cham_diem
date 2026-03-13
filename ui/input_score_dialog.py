@@ -12,12 +12,29 @@ class InputScoreDialog:
 
         self.df = df
         self.excel_path = excel_path
+        self.input_dialog = None # lưu dialog để chỉ tạo 1 bảng duy nhất
 
         self.weights = load_weights()
 
         self.entered_students = set()
 
         self.win = tk.Toplevel(parent)
+        self.win.title("Nhập điểm")
+
+        width = 420
+        height = 300
+
+        # lấy vị trí cửa sổ chính
+        x = parent.winfo_rootx()
+        y = parent.winfo_rooty()
+
+        # đặt dialog gần cửa sổ chính
+        self.win.geometry(f"{width}x{height}+{x+80}+{y+80}")
+                
+        # người dùng không thể mở dialog khác
+        self.win.transient(parent)
+        self.win.grab_set()
+        
         self.win.title("Nhập điểm")
         self.win.geometry("420x300")
 
@@ -33,10 +50,19 @@ class InputScoreDialog:
 
         columns = list(self.weights.keys())
 
-        self.col_box = ttk.Combobox(frame, values=columns, width=18)
+        self.col_box = ttk.Combobox(
+            frame,
+            values=columns,
+            width=18,
+            state="normal"
+        )
+        # gõ phím thì tự động gắn chữ vào
+        self.col_box.bind("<KeyRelease>", self.filter_columns)
+        
         self.col_box.grid(row=0, column=1)
 
         self.col_box.bind("<<ComboboxSelected>>", self.autofill_weight)
+        self.col_box.bind("<Return>", self.select_column) # dùng phím enter thay vì chọn
 
         # TRỌNG SỐ
         tk.Label(frame, text="Trọng số", width=12).grid(row=1, column=0)
@@ -80,7 +106,30 @@ class InputScoreDialog:
                   command=self.save).pack(side="left", padx=5)
 
         tk.Button(btn_frame, text="Đóng", width=10,
-                  command=self.win.destroy).pack(side="left")
+                  command=self.close).pack(side="left")
+    
+    # lọc danh sách
+    def filter_columns(self, event=None):
+
+        text = self.col_box.get().lower()
+
+        if text == "":
+            self.col_box["values"] = list(self.weights.keys())
+            return
+
+        filtered = [
+            col for col in self.weights.keys()
+            if text in col.lower()
+        ]
+
+        self.col_box["values"] = filtered
+
+        # mở dropdown
+        if filtered:
+            self.col_box.event_generate("<Down>")
+        
+    def close(self):
+        self.win.destroy()
 
     def autofill_weight(self, event=None):
 
@@ -92,6 +141,45 @@ class InputScoreDialog:
 
             self.weight_entry.delete(0, tk.END)
             self.weight_entry.insert(0, str(weight))
+            
+    def select_first_column(self, event=None):
+
+        values = self.col_box["values"]
+
+        if not values:
+            return
+
+        # chọn giá trị đầu tiên
+        column = values[0]
+
+        self.col_box.set(column)
+
+        # đóng dropdown
+        self.win.focus()
+
+        # autofill trọng số
+        self.autofill_weight()
+
+        # chuyển sang MSSV
+        self.mssv_entry.focus()
+            
+    def select_column(self, event=None):
+
+        column = self.col_box.get().strip()
+
+        if column == "":
+            return
+
+        # autofill trọng số nếu có
+        if column in self.weights:
+
+            weight = self.weights[column]
+
+            self.weight_entry.delete(0, tk.END)
+            self.weight_entry.insert(0, str(weight))
+
+        # chuyển sang nhập MSSV
+        self.mssv_entry.focus()
 
     def check_student(self, event=None):
 
