@@ -98,7 +98,7 @@ class MainWindow:
 
             df = load_excel(path)
 
-            self.table.load_dataframe(df)
+            self.table.load_dataframe(df,path)
 
             self.current_file = path
 
@@ -176,7 +176,7 @@ class MainWindow:
 
         row = selected[0]
 
-        row_index = self.table.tree.index(row)
+        row_index = int(row)
 
         for col,val in scores.items():
 

@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from core.validator import validate_score
+from core.excel_io import save_excel
 
 
 class StudentTable(tk.Frame):
@@ -10,6 +11,7 @@ class StudentTable(tk.Frame):
         super().__init__(parent)
 
         self.df=None
+        self.file_path=None # lấy đường dẫn để lưu ra file excel khi sửa điểm
 
         self.tree=ttk.Treeview(self)
 
@@ -17,9 +19,10 @@ class StudentTable(tk.Frame):
 
         self.tree.bind("<Double-1>",self.edit_cell)
 
-    def load_dataframe(self,df):
+    def load_dataframe(self,df,path):
 
         self.df=df
+        self.file_path=path
 
         self.refresh()
 
@@ -41,9 +44,13 @@ class StudentTable(tk.Frame):
 
             self.tree.column(col,width=120)
 
-        for _,row in self.df.iterrows():
-
-            self.tree.insert("",tk.END,values=list(row))
+        for idx, row in self.df.iterrows():
+            self.tree.insert(
+                "",
+                tk.END,
+                iid=idx,
+                values=list(row)
+            )
 
     def sort_column(self,col):
 
@@ -64,7 +71,7 @@ class StudentTable(tk.Frame):
 
         col_index=int(column.replace("#",""))-1
 
-        row_index=self.tree.index(row)
+        row_index=int(row)
 
         x,y,w,h=self.tree.bbox(row,column)
 
@@ -80,25 +87,31 @@ class StudentTable(tk.Frame):
 
         def save(e):
 
-            new=entry.get()
+            new = entry.get()
+            col_name = self.df.columns[col_index]
 
             if not validate_score(new):
 
                 messagebox.showerror("Error","Điểm phải từ 0-10")
-
                 entry.destroy()
-
                 return
 
-            self.tree.set(row,column,new)
+            value = float(new)
 
-            col_name=self.df.columns[col_index]
+            # lưu dataframe
+            self.df.loc[row_index, col_name] = value
 
-            self.df.iloc[row_index,col_name]=float(new)
+            # update treeview
+            self.tree.set(row, column, new)
+            
+            # save vào file excel
+            save_excel(self.df, self.file_path)
 
             entry.destroy()
+            
+        entry.bind("<FocusOut>", save) # click ra ngoài để lưu
 
-        entry.bind("<Return>",save)
+        entry.bind("<Return>",save) # enter để lưu
         
     def search(self, keyword):
 
