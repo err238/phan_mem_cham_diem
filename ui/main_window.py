@@ -6,12 +6,12 @@ from tkinterdnd2 import DND_FILES
 from ui.table_view import StudentTable
 from ui.author_dialog import AuthorDialog
 from ui.input_score_dialog import InputScoreDialog
+from ui.tooltip import create_tooltip
 
 from core.excel_io import load_excel, save_excel
 from core.grade_calculator import calculate_total
 from core.backup_service import backup_excel, set_backup_path
 from core.config_service import load_weights
-
 from core.last_file_service import load_recent_files, save_recent_file
 
 
@@ -149,41 +149,59 @@ class MainWindow:
         frame = tk.Frame(self.root)
         frame.pack(fill="x")
 
-        tk.Button(
+        btn_open = tk.Button(
             frame,
             text="📂 Mở",
             command=self.open_excel
-        ).pack(side="left", padx=2)
+        )
+        btn_open.pack(side="left", padx=2)
+        
+        create_tooltip(btn_open,'Mở file excel bạn muốn nhập điểm')
 
-        tk.Button(
+        btn_save = tk.Button(
             frame,
             text="💾 Lưu",
             command=self.save_excel
-        ).pack(side="left", padx=2)
+        )
+        btn_save.pack(side="left", padx=2)
+        
+        create_tooltip(btn_save, 'Lưu file excel đang làm việc')
 
-        tk.Button(
+        btn_score = tk.Button(
             frame,
             text="✏ Nhập điểm",
             command=self.open_input_score
-        ).pack(side="left", padx=2)
+        )
+        btn_score.pack(side="left", padx=2)
         
-        tk.Button(
+        create_tooltip(btn_score, 'Mở bảng nhập điểm')
+        
+        btn_meanscore = tk.Button(
             frame,
             text="🧮 Tính điểm TB",
             command=self.calculate_total
-        ).pack(side="left", padx=2)
+        )
+        btn_meanscore.pack(side="left", padx=2)
+        
+        create_tooltip(btn_meanscore, 'Tính điểm trung bình khi trọng số đã bằng 1')
 
-        tk.Button(
+        btn_bk = tk.Button(
             frame,
             text="📦 Backup",
             command=self.choose_backup
-        ).pack(side="left", padx=2)
+        )
+        btn_bk.pack(side="left", padx=2)
+        
+        create_tooltip(btn_bk, 'Nhập đường dẫn file backup')
 
-        tk.Button(
+        btn_author = tk.Button(
             frame,
             text="ℹ Tác giả",
             command=self.show_author
-        ).pack(side="right", padx=2)
+        )
+        btn_author.pack(side="right", padx=2)
+        
+        create_tooltip(btn_author, 'Thông tin phần mềm')
 
     def create_search(self):
 
@@ -208,7 +226,7 @@ class MainWindow:
         frame = tk.Frame(self.root)
         frame.pack(fill="x")
 
-        self.status_file = tk.Label(frame, text="No file loaded")
+        self.status_file = tk.Label(frame, text="Chưa có dữ liệu")
         self.status_file.pack(side="left", padx=5)
 
         self.status_students = tk.Label(frame, text="")
@@ -233,7 +251,7 @@ class MainWindow:
         )
 
         self.status_students.config(
-            text=f"Students: {total} | Progress: {entered}/{total} ({percent:.0f}%)"
+            text=f"Số SV: {total} | Đã nhập: {entered}/{total} ({percent:.0f}%)"
         )
 
     def enable_drag_drop(self):
@@ -250,7 +268,7 @@ class MainWindow:
 
             messagebox.showerror(
                 "Error",
-                "Drop file Excel (.xlsx)"
+                "Kéo thả file excel (.xlsx)"
             )
 
             return

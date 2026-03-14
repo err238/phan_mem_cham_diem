@@ -6,6 +6,8 @@ from core.validator import validate_score, validate_weight
 from core.excel_io import save_excel
 
 from ui.weight_manager import WeightManager
+from ui.input_manager import InputManager
+from ui.tooltip import create_tooltip
 
 
 class InputScoreDialog:
@@ -42,35 +44,48 @@ class InputScoreDialog:
         frame = tk.Frame(self.win)
         frame.pack(pady=10)
 
+        # ----- COLUMN -----
         tk.Label(frame, text="Cột điểm", width=12).grid(row=0, column=0)
 
-        self.col_box = ttk.Combobox(
-            frame,
-            values=list(self.weights.keys()),
-            width=22
-        )
-
+        self.col_box = ttk.Combobox(frame, width=22)
         self.col_box.grid(row=0, column=1)
 
-        self.col_box.bind("<KeyRelease>", self.autocomplete)
+        self.column_manager = InputManager(
+            self.col_box,
+            list(self.weights.keys())
+        )
+
         self.col_box.bind("<Return>", self.select_column)
         self.col_box.bind("<<ComboboxSelected>>", self.autofill_weight)
 
+        # ----- WEIGHT -----
         tk.Label(frame, text="Trọng số", width=12).grid(row=1, column=0)
 
         self.weight_entry = tk.Entry(frame, width=24)
         self.weight_entry.grid(row=1, column=1)
 
-        self.weight_entry.bind("<Return>",
-                               lambda e: self.mssv_entry.focus())
+        self.weight_entry.bind(
+            "<Return>",
+            lambda e: self.mssv_box.focus()
+        )
 
+        # ----- MSSV -----
         tk.Label(frame, text="MSSV", width=12).grid(row=2, column=0)
 
-        self.mssv_entry = tk.Entry(frame, width=24)
-        self.mssv_entry.grid(row=2, column=1)
+        self.mssv_box = ttk.Combobox(frame, width=22)
+        self.mssv_box.grid(row=2, column=1)
 
-        self.mssv_entry.bind("<Return>", self.check_student)
+        self.mssv_list = self.df["MSSV"].astype(str).tolist()
 
+        self.mssv_manager = InputManager(
+            self.mssv_box,
+            self.mssv_list
+        )
+
+        self.mssv_box.bind("<Return>", self.check_student)
+        self.mssv_box.bind("<<ComboboxSelected>>", self.check_student)
+
+        # ----- NAME -----
         tk.Label(frame, text="Họ tên", width=12).grid(row=3, column=0)
 
         self.name_label = tk.Label(
@@ -82,6 +97,7 @@ class InputScoreDialog:
 
         self.name_label.grid(row=3, column=1)
 
+        # ----- SCORE -----
         tk.Label(frame, text="Điểm", width=12).grid(row=4, column=0)
 
         self.score_entry = tk.Entry(frame, width=24)
@@ -89,6 +105,7 @@ class InputScoreDialog:
 
         self.score_entry.bind("<Return>", self.save)
 
+        # ----- PROGRESS -----
         self.progress_label = tk.Label(self.win)
         self.progress_label.pack()
 
@@ -99,44 +116,39 @@ class InputScoreDialog:
 
         self.weight_sum_label.pack()
 
+        # ----- BUTTONS -----
         btn = tk.Frame(self.win)
         btn.pack(pady=10)
 
-        tk.Button(
+        btn_save = tk.Button(
             btn,
             text="Lưu",
             width=10,
             command=self.save
-        ).pack(side="left", padx=5)
+        )
+        btn_save.pack(side="left", padx=5)
+        
+        create_tooltip(btn_save, 'Lưu điểm vào file excel')
 
-        tk.Button(
+        btn_weight = tk.Button(
             btn,
             text="Trọng số",
             width=10,
             command=self.open_weight_manager
-        ).pack(side="left", padx=5)
+        )
+        btn_weight.pack(side="left", padx=5)
+        
+        create_tooltip(btn_weight, 'Mở bảng trọng số')
 
-        tk.Button(
+        btn_close = tk.Button(
             btn,
             text="Đóng",
             width=10,
             command=self.win.destroy
-        ).pack(side="left")
-
-    def autocomplete(self, event=None):
-
-        text = self.col_box.get().lower()
-
-        if text == "":
-            self.col_box["values"] = list(self.weights.keys())
-            return
-
-        filtered = [
-            c for c in self.weights.keys()
-            if c.lower().startswith(text)
-        ]
-
-        self.col_box["values"] = filtered
+        )
+        btn_close.pack(side="left")
+        
+        create_tooltip(btn_close, 'Đóng cửa sổ')
 
     def autofill_weight(self, event=None):
 
@@ -159,7 +171,7 @@ class InputScoreDialog:
 
             self.autofill_weight()
 
-            self.mssv_entry.focus()
+            self.mssv_box.focus()
 
         else:
 
@@ -169,7 +181,7 @@ class InputScoreDialog:
 
     def check_student(self, event=None):
 
-        mssv = self.mssv_entry.get().strip()
+        mssv = self.mssv_box.get().strip()
 
         match = self.df[
             self.df["MSSV"].astype(str) == mssv
@@ -193,7 +205,7 @@ class InputScoreDialog:
     def save(self, event=None):
 
         column = self.col_box.get().strip()
-        mssv = self.mssv_entry.get().strip()
+        mssv = self.mssv_box.get().strip()
         score_text = self.score_entry.get()
 
         if not validate_score(score_text):
@@ -230,7 +242,9 @@ class InputScoreDialog:
 
             self.weights = load_weights(self.excel_path)
 
-            self.col_box["values"] = list(self.weights.keys())
+            self.column_manager.set_values(
+                list(self.weights.keys())
+            )
 
             self.update_weight_sum()
 
@@ -262,14 +276,14 @@ class InputScoreDialog:
         if self.refresh_callback:
             self.refresh_callback()
 
-        self.mssv_entry.delete(0, tk.END)
+        self.mssv_box.set("")
         self.score_entry.delete(0, tk.END)
 
         self.name_label.config(text="")
 
         self.update_progress()
 
-        self.mssv_entry.focus()
+        self.mssv_box.focus()
 
     def update_progress(self):
 
@@ -307,35 +321,11 @@ class InputScoreDialog:
 
         self.weights = load_weights(self.excel_path)
 
-        self.col_box["values"] = list(self.weights.keys())
+        self.column_manager.set_values(
+            list(self.weights.keys())
+        )
 
         self.update_weight_sum()
 
-        if self.refresh_callback:
-            self.refresh_callback()
-
-    def refresh_table(self):
-
-        if self.refresh_callback:
-            self.refresh_callback()
-
-        self.weights = load_weights(self.excel_path)
-
-        self.col_box["values"] = list(self.weights.keys())
-
-        self.update_weight_sum()
-
-    def after_weight_update(self):
-
-        # reload weights
-        self.weights = load_weights(self.excel_path)
-
-        # cập nhật combobox cột điểm
-        self.col_box["values"] = list(self.weights.keys())
-
-        # cập nhật tổng trọng số
-        self.update_weight_sum()
-
-        # refresh bảng chính nếu cần
         if self.refresh_callback:
             self.refresh_callback()

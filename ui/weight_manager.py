@@ -5,6 +5,8 @@ from core.validator import validate_weight
 from core.config_service import load_weights, save_weight, save_weights
 from core.excel_io import save_excel
 
+from ui.tooltip import create_tooltip
+
 
 class WeightManager:
 
@@ -51,17 +53,20 @@ class WeightManager:
         input_frame = tk.Frame(self.win)
         input_frame.pack(pady=5)
 
+       # nhập cột điểm
+        tk.Label(input_frame, text="Tên cột").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
         self.col_entry = tk.Entry(input_frame, width=20)
-        self.col_entry.pack(side="left", padx=5)
-        
-        # Enter ở ô cột → nhảy sang ô trọng số
-        self.col_entry.bind(
-            "<Return>",
-            lambda e: self.weight_entry.focus()
-        )
+        self.col_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # Enter → nhảy sang trọng số
+        self.col_entry.bind("<Return>", lambda e: self.weight_entry.focus())
+
+        # nhập trọng số
+        tk.Label(input_frame, text="Trọng số").grid(row=0, column=2, padx=5, pady=5, sticky="w")
 
         self.weight_entry = tk.Entry(input_frame, width=10)
-        self.weight_entry.pack(side="left", padx=5)
+        self.weight_entry.grid(row=0, column=3, padx=5, pady=5)
 
         self.weight_entry.bind("<Return>", self.add_column)
 
@@ -69,19 +74,25 @@ class WeightManager:
         btn = tk.Frame(self.win)
         btn.pack(pady=10)
 
-        tk.Button(
+        btn_add = tk.Button(
             btn,
             text="Thêm cột",
             width=10,
             command=self.add_column
-        ).pack(side="left", padx=5)
+        )
+        btn_add.pack(side="left", padx=5)
+        
+        create_tooltip(btn_add, 'Thêm cột điểm và trọng số')
 
-        tk.Button(
+        btn_close = tk.Button(
             btn,
             text="Đóng",
             width=10,
             command=self.win.destroy
-        ).pack(side="left")
+        )
+        btn_close.pack(side="left")
+        
+        create_tooltip(btn_close, 'Đóng bảng trọng số')
 
         # tự nhảy đến cột weight luôn
         self.col_entry.focus()
