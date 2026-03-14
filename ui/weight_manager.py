@@ -13,7 +13,7 @@ class WeightManager:
 
         self.win = tk.Toplevel(parent)
         self.win.title("Quản lý trọng số")
-        self.win.geometry("350x300")
+        self.win.geometry("350x320")
 
         self.create_ui()
         self.load_weights()

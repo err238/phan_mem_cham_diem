@@ -1,81 +1,257 @@
 import tkinter as tk
-from tkinter import filedialog,messagebox
+import webbrowser # thêm link youtube hướng dẫn sử dụng phần mềm
+from tkinter import filedialog, messagebox
 from tkinterdnd2 import DND_FILES
 
 from ui.table_view import StudentTable
 from ui.author_dialog import AuthorDialog
+from ui.input_score_dialog import InputScoreDialog
 
-from core.excel_io import load_excel,save_excel
+from core.excel_io import load_excel, save_excel
 from core.grade_calculator import calculate_total
-from core.backup_service import backup_excel
+from core.backup_service import backup_excel, set_backup_path
 from core.config_service import load_weights
 
-from ui.input_score_dialog import InputScoreDialog
-from core.backup_service import backup_excel,set_backup_path
+from core.last_file_service import load_recent_files, save_recent_file
 
 
 class MainWindow:
 
-    def __init__(self,root):
+    def __init__(self, root):
 
-        self.root=root
+        self.root = root
+        self.root.title("Student Grade Manager")
+        
+        self.create_menu()
+        self.create_toolbar()
+        self.create_search()
 
-        self.table=StudentTable(root)
+        self.table = StudentTable(root)
+        self.table.pack(fill="both", expand=True)
 
-        self.table.pack(fill="both",expand=True)
-
-        self.current_file=None
+        self.current_file = None
         self.input_dialog = None
 
-        self.create_toolbar()
-
         self.create_status()
+        
 
         self.enable_drag_drop()
-        self.create_search()
+
+        files = load_recent_files()
+
+        if files:
+            try:
+                self.load_file(files[0])
+            except:
+                pass
+
+    def create_menu(self):
+
+        menubar = tk.Menu(self.root)
+
+        # -------- File menu --------
+        file_menu = tk.Menu(menubar, tearoff=0)
+
+        file_menu.add_command(
+            label="Open Excel",
+            command=self.open_excel
+        )
+
+        self.recent_menu = tk.Menu(file_menu, tearoff=0)
+
+        file_menu.add_cascade(
+            label="Recent Files",
+            menu=self.recent_menu
+        )
+
+        file_menu.add_separator()
+
+        file_menu.add_command(
+            label="Exit",
+            command=self.root.quit
+        )
+
+        menubar.add_cascade(
+            label="File",
+            menu=file_menu
+        )
+
+        # -------- Tools menu --------
+        tools_menu = tk.Menu(menubar, tearoff=0)
+
+        tools_menu.add_command(
+            label="Save",
+            command=self.save_excel
+        )
+
+        tools_menu.add_command(
+            label="Calculate Total",
+            command=self.calculate_total
+        )
+
+        tools_menu.add_command(
+            label="Nhập điểm",
+            command=self.open_input_score
+        )
+
+        tools_menu.add_command(
+            label="Backup Folder",
+            command=self.choose_backup
+        )
+
+        menubar.add_cascade(
+            label="Tools",
+            menu=tools_menu
+        )
+
+        # -------- Help menu --------
+        help_menu = tk.Menu(menubar, tearoff=0)
+
+        help_menu.add_command(
+            label="Hướng dẫn sử dụng (YouTube)",
+            command=self.open_help_video
+        )
+
+        help_menu.add_separator()
+
+        help_menu.add_command(
+            label="Tác giả",
+            command=self.show_author
+        )
+
+        menubar.add_cascade(label="Help", menu=help_menu)
+
+        self.root.config(menu=menubar)
+  
+    def update_recent_menu(self):
+
+        self.recent_menu.delete(0, tk.END)
+
+        files = load_recent_files()
+
+        if not files:
+
+            self.recent_menu.add_command(
+                label="(Empty)",
+                state="disabled"
+            )
+            return
+
+        for path in files:
+
+            self.recent_menu.add_command(
+                label=path,
+                command=lambda p=path: self.load_file(p)
+            )
 
     def create_toolbar(self):
 
         frame = tk.Frame(self.root)
         frame.pack(fill="x")
 
-        tk.Button(frame,text="Open Excel",
-                command=self.open_excel).pack(side="left")
+        tk.Button(
+            frame,
+            text="📂 Open",
+            command=self.open_excel
+        ).pack(side="left", padx=2)
 
-        tk.Button(frame,text="Save",
-                command=self.save_excel).pack(side="left")
+        tk.Button(
+            frame,
+            text="💾 Save",
+            command=self.save_excel
+        ).pack(side="left", padx=2)
 
-        tk.Button(frame,text="Calculate Total",
-                command=self.calculate_total).pack(side="left")
+        tk.Button(
+            frame,
+            text="🧮 Calculate",
+            command=self.calculate_total
+        ).pack(side="left", padx=2)
 
-        tk.Button(frame,text="Nhập điểm",
-                command=self.open_input_score).pack(side="left")
+        tk.Button(
+            frame,
+            text="✏ Nhập điểm",
+            command=self.open_input_score
+        ).pack(side="left", padx=2)
 
-        tk.Button(frame,text="Backup Folder",
-                command=self.choose_backup).pack(side="left")
+        tk.Button(
+            frame,
+            text="📦 Backup",
+            command=self.choose_backup
+        ).pack(side="left", padx=2)
 
-        tk.Button(frame,text="Tác giả",
-                command=self.show_author).pack(side="right")
+        tk.Button(
+            frame,
+            text="ℹ Tác giả",
+            command=self.show_author
+        ).pack(side="right", padx=2)
+
+    def create_search(self):
+
+        frame = tk.Frame(self.root)
+        frame.pack(fill="x")
+
+        tk.Label(frame, text="Search").pack(side="left")
+
+        self.search_var = tk.StringVar()
+
+        entry = tk.Entry(
+            frame,
+            textvariable=self.search_var
+        )
+
+        entry.pack(side="left", padx=5)
+
+        entry.bind("<KeyRelease>", self.do_search)
 
     def create_status(self):
 
-        self.status=tk.Label(self.root,text="No file loaded")
+        frame = tk.Frame(self.root)
+        frame.pack(fill="x")
 
-        self.status.pack(fill="x")
+        self.status_file = tk.Label(frame, text="No file loaded")
+        self.status_file.pack(side="left", padx=5)
+
+        self.status_students = tk.Label(frame, text="")
+        self.status_students.pack(side="right", padx=5)
+
+    def update_status(self):
+
+        if self.current_file is None:
+            return
+
+        total = len(self.table.df)
+
+        entered = 0
+
+        if "Total" in self.table.df.columns:
+            entered = self.table.df["Total"].count()
+
+        percent = (entered / total * 100) if total else 0
+
+        self.status_file.config(
+            text=f"Loaded: {self.current_file}"
+        )
+
+        self.status_students.config(
+            text=f"Students: {total} | Progress: {entered}/{total} ({percent:.0f}%)"
+        )
 
     def enable_drag_drop(self):
 
         self.root.drop_target_register(DND_FILES)
 
-        self.root.dnd_bind("<<Drop>>",self.drop_file)
+        self.root.dnd_bind("<<Drop>>", self.drop_file)
 
-    def drop_file(self,event):
+    def drop_file(self, event):
 
-        path=event.data.strip("{}")
+        path = event.data.strip("{}")
 
         if not path.endswith(".xlsx"):
 
-            messagebox.showerror("Error","Drop file Excel (.xlsx)")
+            messagebox.showerror(
+                "Error",
+                "Drop file Excel (.xlsx)"
+            )
 
             return
 
@@ -83,15 +259,14 @@ class MainWindow:
 
     def open_excel(self):
 
-        path=filedialog.askopenfilename(
-            filetypes=[("Excel","*.xlsx")]
+        path = filedialog.askopenfilename(
+            filetypes=[("Excel", "*.xlsx")]
         )
 
         if path:
-
             self.load_file(path)
 
-    def load_file(self,path):
+    def load_file(self, path):
 
         try:
 
@@ -99,16 +274,20 @@ class MainWindow:
 
             df = load_excel(path)
 
-            self.table.load_dataframe(df,path)
+            self.table.load_dataframe(df, path)
 
             self.current_file = path
 
-            self.status.config(text=f"Loaded: {path}")
+            save_recent_file(path)
+
+            self.update_recent_menu()
+
+            self.update_status()
 
         except Exception as e:
 
             messagebox.showerror("Error", str(e))
-        
+
     def save_excel(self):
 
         if self.table.df is None:
@@ -116,59 +295,52 @@ class MainWindow:
 
         save_excel(self.table.df, self.current_file)
 
-        self.status.config(text="Saved")
+        self.status_file.config(text="Saved")
 
     def calculate_total(self):
 
         try:
 
-            weights=load_weights()
+            weights = load_weights()
 
-            self.table.df=calculate_total(self.table.df,weights)
+            self.table.df = calculate_total(
+                self.table.df,
+                weights
+            )
 
             self.table.refresh()
 
+            self.update_status()
+
         except Exception as e:
 
-            messagebox.showerror("Error",str(e))
+            messagebox.showerror(
+                "Error",
+                str(e)
+            )
 
     def show_author(self):
 
         AuthorDialog(self.root)
-        
-    def create_search(self):
 
-        frame = tk.Frame(self.root)
-        frame.pack(fill="x")
-
-        tk.Label(frame,text="Search").pack(side="left")
-
-        self.search_var = tk.StringVar()
-
-        entry = tk.Entry(frame,textvariable=self.search_var)
-
-        entry.pack(side="left",padx=5)
-
-        entry.bind("<KeyRelease>",self.do_search)
-        
-    def do_search(self,event):
+    def do_search(self, event):
 
         keyword = self.search_var.get()
 
         self.table.search(keyword)
-        
+
     def open_input_score(self):
 
         if self.table.df is None:
             return
 
-        # nếu dialog đang mở thì focus vào nó
         if self.input_dialog and self.input_dialog.win.winfo_exists():
+
             self.input_dialog.win.lift()
             self.input_dialog.win.focus_force()
+
             return
 
-        # nếu chưa mở thì tạo mới
         self.input_dialog = InputScoreDialog(
             self.root,
             self.table.df,
@@ -176,41 +348,17 @@ class MainWindow:
             self.table.refresh
         )
 
-    def apply_scores(self,scores):
-
-        selected = self.table.tree.selection()
-
-        if not selected:
-            return
-
-        row = selected[0]
-
-        row_index = int(row)
-
-        for col,val in scores.items():
-
-            if val:
-
-                self.table.df.loc[row_index,col] = float(val)
-
-        self.table.refresh()
-        
     def choose_backup(self):
 
         folder = filedialog.askdirectory()
 
         if folder:
-
             set_backup_path(folder)
             
-    def after_input_score(self):
+    # Tạo nút hướng dẫn
+    def open_help_video(self):
 
-        # refresh table
-        self.table.refresh()
+        url = "https://www.youtube.com/@err238"
 
-        # save trực tiếp excel
-        save_excel(self.table.df, self.current_file)
+        webbrowser.open(url)
 
-        self.status.config(text="Score updated")
-        
-    
