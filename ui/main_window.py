@@ -172,9 +172,10 @@ class MainWindow:
         self.input_dialog = InputScoreDialog(
             self.root,
             self.table.df,
-            self.current_file
+            self.current_file,
+            self.table.refresh
         )
-        
+
     def apply_scores(self,scores):
 
         selected = self.table.tree.selection()
