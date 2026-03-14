@@ -314,4 +314,28 @@ class InputScoreDialog:
         if self.refresh_callback:
             self.refresh_callback()
 
+    def refresh_table(self):
 
+        if self.refresh_callback:
+            self.refresh_callback()
+
+        self.weights = load_weights(self.excel_path)
+
+        self.col_box["values"] = list(self.weights.keys())
+
+        self.update_weight_sum()
+
+    def after_weight_update(self):
+
+        # reload weights
+        self.weights = load_weights(self.excel_path)
+
+        # cập nhật combobox cột điểm
+        self.col_box["values"] = list(self.weights.keys())
+
+        # cập nhật tổng trọng số
+        self.update_weight_sum()
+
+        # refresh bảng chính nếu cần
+        if self.refresh_callback:
+            self.refresh_callback()

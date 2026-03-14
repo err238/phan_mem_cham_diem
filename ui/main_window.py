@@ -20,7 +20,7 @@ class MainWindow:
     def __init__(self, root):
 
         self.root = root
-        self.root.title("Student Grade Manager")
+        self.root.title("Phần mềm nhập điểm")
         
         self.create_menu()
         self.create_toolbar()
@@ -53,21 +53,21 @@ class MainWindow:
         file_menu = tk.Menu(menubar, tearoff=0)
 
         file_menu.add_command(
-            label="Open Excel",
+            label="Mở file excel",
             command=self.open_excel
         )
 
         self.recent_menu = tk.Menu(file_menu, tearoff=0)
 
         file_menu.add_cascade(
-            label="Recent Files",
+            label="File gần đây",
             menu=self.recent_menu
         )
 
         file_menu.add_separator()
 
         file_menu.add_command(
-            label="Exit",
+            label="Thoát",
             command=self.root.quit
         )
 
@@ -80,12 +80,12 @@ class MainWindow:
         tools_menu = tk.Menu(menubar, tearoff=0)
 
         tools_menu.add_command(
-            label="Save",
+            label="Lưu",
             command=self.save_excel
         )
 
         tools_menu.add_command(
-            label="Calculate Total",
+            label="Tính điểm TB",
             command=self.calculate_total
         )
 
@@ -95,12 +95,12 @@ class MainWindow:
         )
 
         tools_menu.add_command(
-            label="Backup Folder",
+            label="Thư mục Backup",
             command=self.choose_backup
         )
 
         menubar.add_cascade(
-            label="Tools",
+            label="Công cụ",
             menu=tools_menu
         )
 
@@ -119,7 +119,7 @@ class MainWindow:
             command=self.show_author
         )
 
-        menubar.add_cascade(label="Help", menu=help_menu)
+        menubar.add_cascade(label="Hỗ trợ", menu=help_menu)
 
         self.root.config(menu=menubar)
   
@@ -151,19 +151,19 @@ class MainWindow:
 
         tk.Button(
             frame,
-            text="📂 Open",
+            text="📂 Mở",
             command=self.open_excel
         ).pack(side="left", padx=2)
 
         tk.Button(
             frame,
-            text="💾 Save",
+            text="💾 Lưu",
             command=self.save_excel
         ).pack(side="left", padx=2)
 
         tk.Button(
             frame,
-            text="🧮 Calculate",
+            text="🧮 Tính điểm TB",
             command=self.calculate_total
         ).pack(side="left", padx=2)
 
@@ -190,7 +190,7 @@ class MainWindow:
         frame = tk.Frame(self.root)
         frame.pack(fill="x")
 
-        tk.Label(frame, text="Search").pack(side="left")
+        tk.Label(frame, text="Tìm kiếm (MSSV hoặc Họ tên)").pack(side="left")
 
         self.search_var = tk.StringVar()
 

@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 
 from core.validator import validate_weight
 from core.config_service import load_weights, save_weight, save_weights
+from core.excel_io import save_excel
 
 
 class WeightManager:
@@ -17,7 +18,7 @@ class WeightManager:
 
         self.win = tk.Toplevel(parent)
         self.win.title("Quản lý trọng số")
-        self.win.geometry("350x300")
+        self.win.geometry("350x380")
 
         self.create_ui()
         self.load_table()
@@ -211,6 +212,10 @@ class WeightManager:
 
         self.col_entry.focus()
         
+        # báo cho InputScoreDialog cập nhật
+        if self.refresh_callback:
+            self.refresh_callback()
+        
         
     # xóa cột
     def delete_column(self, event=None):
@@ -225,28 +230,23 @@ class WeightManager:
         if not messagebox.askyesno("Xóa", f"Xóa cột {col}?"):
             return
 
-        # xóa trong weights
         if col in self.weights:
             del self.weights[col]
 
-        # xóa trong treeview
         self.tree.delete(col)
 
-        # xóa trong dataframe
         if self.df is not None and col in self.df.columns:
+
             self.df.drop(columns=[col], inplace=True)
 
-        # LƯU LẠI FILE CONFIG
-        save_weights(self.excel_path, self.weights)
+            save_excel(self.df, self.excel_path)
 
+        save_weights(self.excel_path, self.weights)
 
         self.update_sum()
 
-        # refresh bảng chính
         if self.refresh_callback:
             self.refresh_callback()
-
-
 
     # đổi tên
     def rename_column(self, event=None):
