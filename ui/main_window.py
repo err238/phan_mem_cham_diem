@@ -301,7 +301,7 @@ class MainWindow:
 
         try:
 
-            weights = load_weights()
+            weights = load_weights(self.current_file)
 
             self.table.df = calculate_total(
                 self.table.df,
