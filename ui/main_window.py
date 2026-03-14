@@ -83,15 +83,15 @@ class MainWindow:
             label="Lưu",
             command=self.save_excel
         )
+        
+        tools_menu.add_command(
+            label="Nhập điểm",
+            command=self.open_input_score
+        )
 
         tools_menu.add_command(
             label="Tính điểm TB",
             command=self.calculate_total
-        )
-
-        tools_menu.add_command(
-            label="Nhập điểm",
-            command=self.open_input_score
         )
 
         tools_menu.add_command(
@@ -163,14 +163,14 @@ class MainWindow:
 
         tk.Button(
             frame,
-            text="🧮 Tính điểm TB",
-            command=self.calculate_total
-        ).pack(side="left", padx=2)
-
-        tk.Button(
-            frame,
             text="✏ Nhập điểm",
             command=self.open_input_score
+        ).pack(side="left", padx=2)
+        
+        tk.Button(
+            frame,
+            text="🧮 Tính điểm TB",
+            command=self.calculate_total
         ).pack(side="left", padx=2)
 
         tk.Button(
