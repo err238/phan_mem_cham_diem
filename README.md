@@ -7,5 +7,5 @@ Thầy cô có thể thêm, sửa, xóa cột điểm và hệ số của cột 
 Sau khi nhập thì điểm số sẽ được lưu trực tiếp trên file excel của thầy cô (có 5 phiên bản backup mới nhất)
 
 ## Xem hướng dẫn sử dụng phần mềm đầy đủ tại đây
-https://www.youtube.com/@err238
+https://youtu.be/Eej_k5vMW0M
 
