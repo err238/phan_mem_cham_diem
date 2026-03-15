@@ -232,6 +232,7 @@ class MainWindow:
         self.status_students = tk.Label(frame, text="")
         self.status_students.pack(side="right", padx=5)
 
+    # thanh trạng thái bên dưới
     def update_status(self):
 
         if self.current_file is None:
@@ -241,17 +242,20 @@ class MainWindow:
 
         entered = 0
 
-        if "Total" in self.table.df.columns:
-            entered = self.table.df["Total"].count()
+        # kiểm tra điểm >= 5
+        if "TongKet" in self.table.df.columns:
+            passed = (self.table.df["TongKet"] >= 5).sum()
+        else:
+            passed = 0
 
         percent = (entered / total * 100) if total else 0
 
         self.status_file.config(
             text=f"Loaded: {self.current_file}"
         )
-
+        
         self.status_students.config(
-            text=f"Số SV: {total} | Đã nhập: {entered}/{total} ({percent:.0f}%)"
+            text=f"Số SV: {total} | SV trên TB: {passed}/{total} ({percent:.0f}%)"
         )
 
     def enable_drag_drop(self):

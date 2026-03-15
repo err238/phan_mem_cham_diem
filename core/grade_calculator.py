@@ -2,7 +2,7 @@ def calculate_total(df, weights):
 
     if abs(sum(weights.values()) - 1) > 0.0001:
 
-        raise Exception("Tổng hệ số phải bằng 1")
+        raise Exception("Hãy đảm bảo đã nhập hết điểm và hệ số.\n\nTổng hệ số phải bằng 1")
 
     total = 0
 
@@ -12,8 +12,8 @@ def calculate_total(df, weights):
 
             raise Exception(f"Thiếu cột {col}")
 
-        total += df[col] * w
+        total += round(df[col].fillna(0) * w,2)
 
-    df["Total"] = total
+    df["TongKet"] = total
 
     return df
