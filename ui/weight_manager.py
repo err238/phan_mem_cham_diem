@@ -172,9 +172,16 @@ class WeightManager:
             entry.destroy()
 
             self.update_sum()
+            
+            save_weights(self.excel_path, self.weights) # Lưu vào file/config
+            if self.refresh_callback:
+                self.refresh_callback() # Thông báo cho bảng nhập điểm cập nhật lại list
 
         entry.bind("<Return>", save_edit)
         entry.bind("<FocusOut>", save_edit)
+        
+        # lưu trọng số đã sửa
+        save_weights(self.excel_path, self.weights)
 
     def save(self):
 
@@ -261,48 +268,49 @@ class WeightManager:
 
     # đổi tên
     def rename_column(self, event=None):
-
         selected = self.tree.selection()
-
         if not selected:
             return
 
-        col = selected[0]
-
+        col = selected[0] # Tên cột cũ
         x, y, w, h = self.tree.bbox(col, "#1")
-
         value = self.tree.set(col, "#1")
 
         entry = tk.Entry(self.tree)
         entry.place(x=x, y=y, width=w, height=h)
-
         entry.insert(0, value)
         entry.focus()
 
         def save_edit(e=None):
-
             new = entry.get().strip()
-
-            if new == "":
+            
+            # Nếu tên không đổi hoặc rỗng thì hủy
+            if new == "" or new == col:
                 entry.destroy()
                 return
 
+            # 1. Cập nhật trong từ điển weights
             weight = self.weights[col]
-
             del self.weights[col]
-
             self.weights[new] = weight
 
+            # 2. CẬP NHẬT TRONG DATAFRAME (Quan trọng)
+            if self.df is not None and col in self.df.columns:
+                self.df.rename(columns={col: new}, inplace=True)
+                save_excel(self.df, self.excel_path) # Lưu ngay vào file Excel
+
+            # 3. Cập nhật giao diện Treeview
             self.tree.delete(col)
-
-            self.tree.insert(
-                "",
-                tk.END,
-                iid=new,
-                values=(new, weight)
-            )
-
+            self.tree.insert("", tk.END, iid=new, values=(new, weight))
+            
+            # 4. Lưu cấu hình trọng số mới
+            save_weights(self.excel_path, self.weights)
             entry.destroy()
+
+            # 5. Thông báo cho InputScoreDialog cập nhật lại Combobox
+            if self.refresh_callback:
+                self.refresh_callback()
 
         entry.bind("<Return>", save_edit)
         entry.bind("<FocusOut>", save_edit)
+
