@@ -380,7 +380,7 @@ class MainWindow:
     # Tạo nút hướng dẫn
     def open_help_video(self):
 
-        url = "https://www.youtube.com/@err238"
+        url = "https://youtu.be/Eej_k5vMW0M"
 
         webbrowser.open(url)
 
