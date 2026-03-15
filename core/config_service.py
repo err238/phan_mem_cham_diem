@@ -1,26 +1,62 @@
 import json
 import os
+import hashlib
+import pandas as pd
 
-CONFIG_PATH = "config/weights.json"
+CONFIG_DIR = "config/weights"
 
-def load_weights():
 
-    default = {
-        "Quiz": 0.3,
-        "Midterm": 0.3,
-        "Final": 0.4
-    }
+def get_sheet_hash(excel_path):
 
-    if not os.path.exists(CONFIG_PATH):
+    df = pd.read_excel(excel_path)
 
-        with open(CONFIG_PATH, "w") as f:
+    # chọn các cột định danh sinh viên
+    cols = []
+
+    if "MSSV" in df.columns:
+        cols.append("MSSV")
+
+    if "HoTen" in df.columns:
+        cols.append("HoTen")
+
+    if not cols:
+        cols = list(df.columns[:2])
+
+    data = df[cols].fillna("").astype(str)
+
+    text = data.to_csv(index=False)
+
+    sha = hashlib.sha256(text.encode())
+
+    return sha.hexdigest()[:16]
+
+
+def get_config_path(excel_path):
+
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+
+    file_hash = get_sheet_hash(excel_path)
+
+    return os.path.join(CONFIG_DIR, f"{file_hash}.json")
+
+
+def load_weights(excel_path):
+
+    path = get_config_path(excel_path)
+
+    default = {}
+
+    if not os.path.exists(path):
+
+        with open(path, "w") as f:
             json.dump(default, f, indent=4)
 
         return default
 
     try:
 
-        with open(CONFIG_PATH) as f:
+        with open(path) as f:
+
             data = json.load(f)
 
             if not isinstance(data, dict):
@@ -30,17 +66,28 @@ def load_weights():
 
     except:
 
-        # reset file nếu bị hỏng
-        with open(CONFIG_PATH, "w") as f:
+        with open(path, "w") as f:
             json.dump(default, f, indent=4)
 
         return default
-    
-def save_weight(column, weight):
 
-    weights = load_weights()
+
+def save_weight(excel_path, column, weight):
+
+    weights = load_weights(excel_path)
 
     weights[column] = weight
 
-    with open(CONFIG_PATH, "w") as f:
+    path = get_config_path(excel_path)
+
+    with open(path, "w") as f:
         json.dump(weights, f, indent=4)
+
+# khi xóa cột thì lưu lại
+def save_weights(excel_path, weights):
+
+    path = get_config_path(excel_path)
+
+    with open(path, "w") as f:
+        json.dump(weights, f, indent=4)
+

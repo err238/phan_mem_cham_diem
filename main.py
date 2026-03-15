@@ -5,7 +5,7 @@ def main():
 
     root = TkinterDnD.Tk()
 
-    root.title("Student Grade Manager")
+    root.title("Phần mềm nhập điểm")
 
     root.geometry("1100x650")
 

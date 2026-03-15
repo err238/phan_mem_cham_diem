@@ -13,9 +13,39 @@ class StudentTable(tk.Frame):
         self.df=None
         self.file_path=None # lấy đường dẫn để lưu ra file excel khi sửa điểm
 
-        self.tree=ttk.Treeview(self)
+        # frame chứa bảng + scrollbar
+        frame = tk.Frame(self)
+        frame.pack(fill="both", expand=True)
 
-        self.tree.pack(fill="both",expand=True)
+        # treeview
+        self.tree = ttk.Treeview(frame)
+
+        # scrollbar dọc
+        scroll_y = ttk.Scrollbar(
+            frame,
+            orient="vertical",
+            command=self.tree.yview
+        )
+
+        # scrollbar ngang
+        scroll_x = ttk.Scrollbar(
+            frame,
+            orient="horizontal",
+            command=self.tree.xview
+        )
+
+        self.tree.configure(
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set
+        )
+
+        # layout
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
 
         self.tree.bind("<Double-1>",self.edit_cell)
 
@@ -30,27 +60,31 @@ class StudentTable(tk.Frame):
 
         self.tree.delete(*self.tree.get_children())
 
-        self.tree["columns"]=list(self.df.columns)
-
-        self.tree["show"]="headings"
+        self.tree["columns"] = list(self.df.columns)
+        self.tree["show"] = "headings"
 
         for col in self.df.columns:
 
             self.tree.heading(
                 col,
                 text=col,
-                command=lambda c=col:self.sort_column(c)
+                command=lambda c=col: self.sort_column(c)
             )
 
-            self.tree.column(col,width=120)
+            self.tree.column(col, width=140, stretch=False)
 
         for idx, row in self.df.iterrows():
+
             self.tree.insert(
                 "",
                 tk.END,
                 iid=idx,
                 values=list(row)
             )
+            
+        # FIX SCROLLBAR
+        self.tree.xview_moveto(0)
+        self.tree.update_idletasks()
 
     def sort_column(self,col):
 
