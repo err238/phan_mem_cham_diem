@@ -1,5 +1,5 @@
 ('D:\\Learning\\Coding\\python_projects\\phan_mem_cham_diem\\build\\ChamDiemSV\\ChamDiemSV.exe',
- False,
+ True,
  False,
  True,
  ['D:\\Learning\\Coding\\python_projects\\phan_mem_cham_diem\\assets\\icon.ico'],
@@ -70,8 +70,8 @@
  [],
  False,
  False,
- 1773568959,
- [('runw.exe',
-   'd:\\Learning\\Coding\\python_projects\\phan_mem_cham_diem\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
+ 1773582829,
+ [('run.exe',
+   'd:\\Learning\\Coding\\python_projects\\phan_mem_cham_diem\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
    'EXECUTABLE')],
  'c:\\python313\\python313.dll')
