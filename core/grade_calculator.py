@@ -12,8 +12,8 @@ def calculate_total(df, weights):
 
             raise Exception(f"Thiếu cột {col}")
 
-        total += df[col] * w
+        total += round(df[col].fillna(0) * w,2)
 
-    df["Total"] = total
+    df["TongKet"] = total
 
     return df

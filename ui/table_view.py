@@ -62,6 +62,12 @@ class StudentTable(tk.Frame):
 
         self.tree["columns"] = list(self.df.columns)
         self.tree["show"] = "headings"
+        
+        # gắn màu cho sv có điểm < 5
+        self.tree.tag_configure(
+            "fail",
+            background="#ffe5d6"
+        )
 
         for col in self.df.columns:
 
@@ -73,14 +79,27 @@ class StudentTable(tk.Frame):
 
             self.tree.column(col, width=140, stretch=False)
 
+        # gắn tags màu cho sv có điểm < 5
         for idx, row in self.df.iterrows():
+            values = [
+                "" if str(v) == "nan" else v
+                for v in row
+            ]
+            tags = ()
+            
+            if "TongKet" in self.df.columns:
+                total = row["TongKet"]
+                if total == total and total < 5:   # kiểm tra NaN
+                    tags = ("fail",)
 
             self.tree.insert(
                 "",
                 tk.END,
                 iid=idx,
-                values=list(row)
+                values=values,
+                tags=tags
             )
+
             
         # FIX SCROLLBAR
         self.tree.xview_moveto(0)

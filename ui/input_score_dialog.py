@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+import numpy as np
+
 from core.config_service import load_weights, save_weight
 from core.validator import validate_score, validate_weight
 from core.excel_io import save_excel
@@ -227,7 +229,7 @@ class InputScoreDialog:
 
                 messagebox.showerror(
                     "Error",
-                    "Trọng số phải từ 0 đến 1"
+                    "Vui lòng kiểm tra lại trọng số!\n\nTrọng số phải từ 0 đến 1"
                 )
 
                 return
@@ -248,9 +250,9 @@ class InputScoreDialog:
 
             self.update_weight_sum()
 
+        # nếu chưa nhập điểm thì mặc định là rỗng
         if column not in self.df.columns:
-
-            self.df[column] = 0.0
+            self.df[column] = np.nan
 
         match = self.df[
             self.df["MSSV"].astype(str) == mssv
